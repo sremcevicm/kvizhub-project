@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="KvizHub.Gateway/KvizHub.Gateway.csproj" />
+  <Project Path="KvizHub.QuizService/KvizHub.QuizService.csproj" />
+  <Project Path="KvizHub.ScoreService/KvizHub.ScoreService.csproj" />
+  <Project Path="KvizHub.UserService/KvizHub.UserService.csproj" />
+</Solution>

@@ -1,0 +1,6 @@
+@KvizHub.Gateway_HostAddress = http://localhost:5269
+
+GET {{KvizHub.Gateway_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

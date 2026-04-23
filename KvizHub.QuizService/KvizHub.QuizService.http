@@ -1,0 +1,6 @@
+@KvizHub.QuizService_HostAddress = http://localhost:5218
+
+GET {{KvizHub.QuizService_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

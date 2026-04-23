@@ -1,0 +1,92 @@
+.leaderboard-page {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.leaderboard-page h1 {
+  text-align: center;
+  margin-bottom: 0.5rem;
+  color: #333;
+}
+
+.leaderboard-subtitle {
+  text-align: center;
+  color: #888;
+  margin-bottom: 2rem;
+}
+
+.leaderboard-table {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.table-header {
+  display: flex;
+  padding: 1rem 1.5rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  font-weight: 600;
+}
+
+.table-row {
+  display: flex;
+  padding: 0.8rem 1.5rem;
+  border-bottom: 1px solid #f0f0f0;
+  align-items: center;
+  transition: background 0.2s;
+}
+
+.table-row:hover {
+  background: #f8f9ff;
+}
+
+.table-row.top-three {
+  background: #fafafa;
+  font-weight: 500;
+}
+
+.col-rank {
+  width: 70px;
+  text-align: center;
+  font-size: 1.1rem;
+}
+
+.col-name {
+  flex: 1;
+  font-weight: 500;
+}
+
+.col-score {
+  width: 130px;
+  text-align: center;
+  font-weight: 600;
+  color: #667eea;
+}
+
+.col-quizzes,
+.col-time {
+  width: 100px;
+  text-align: center;
+  color: #666;
+}
+
+.col-avg {
+  width: 100px;
+  text-align: center;
+  color: #4caf50;
+  font-weight: 500;
+}
+
+.leaderboard-actions {
+  text-align: center;
+  margin-top: 2rem;
+}
+
+.btn-back-quizzes {
+  color: #667eea;
+  text-decoration: none;
+  font-weight: 500;
+}
