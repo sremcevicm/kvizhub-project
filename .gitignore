@@ -29,3 +29,6 @@ Logs/
 # OS
 .DS_Store
 Thumbs.db
+
+# Docker
+.env

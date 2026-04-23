@@ -1,0 +1,10 @@
+**/bin/
+**/obj/
+**/node_modules/
+**/build/
+**/.git/
+**/.vs/
+**/.vscode/
+**/Logs/
+**/*.user
+**/package-lock.json

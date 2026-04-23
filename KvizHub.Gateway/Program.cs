@@ -15,8 +15,10 @@ Log.Logger = new LoggerConfiguration()
 
 builder.Host.UseSerilog();
 
-// Load ocelot.json
-builder.Configuration.AddJsonFile("ocelot.json", optional: false, reloadOnChange: true);
+// Load ocelot config – use ocelot.Docker.json when running in Docker (ASPNETCORE_ENVIRONMENT=Docker)
+var env = builder.Environment.EnvironmentName;
+var ocelotFile = File.Exists($"ocelot.{env}.json") ? $"ocelot.{env}.json" : "ocelot.json";
+builder.Configuration.AddJsonFile(ocelotFile, optional: false, reloadOnChange: true);
 
 // Add Ocelot
 builder.Services.AddOcelot(builder.Configuration);
