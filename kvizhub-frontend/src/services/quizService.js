@@ -40,8 +40,13 @@ const quizService = {
     return response.data;
   },
 
-  delete: async (id) => {
+    delete: async (id) => {
     await api.delete(`/api/quizzes/${id}`);
+  },
+
+  getCategories: async () => {
+    const response = await api.get('/api/categories');
+    return response.data;
   },
 };
 

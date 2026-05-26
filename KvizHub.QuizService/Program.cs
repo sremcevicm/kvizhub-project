@@ -66,11 +66,12 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// Auto-migrate
+// Auto-migrate and seed
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<QuizDbContext>();
     db.Database.Migrate();
+    await DbSeeder.SeedAsync(db);
 }
 
 if (app.Environment.IsDevelopment())

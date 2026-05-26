@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import scoreService from '../services/scoreService';
+import quizService from '../services/quizService';
 import './MyStats.css';
 
 const MyStats = () => {
-  const [stats, setStats] = useState(null);
+    const [stats, setStats] = useState(null);
+  const [quizNames, setQuizNames] = useState({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -14,6 +16,21 @@ const MyStats = () => {
     try {
       const data = await scoreService.getMyStats();
       setStats(data);
+      // Load quiz titles for all attempts
+      if (data?.recentAttempts) {
+        const names = {};
+        await Promise.all(data.recentAttempts.map(async (a) => {
+          if (!names[a.quizId]) {
+            try {
+              const quiz = await quizService.getById(a.quizId);
+              names[a.quizId] = quiz.title;
+            } catch {
+              names[a.quizId] = `Kviz #${a.quizId}`;
+            }
+          }
+        }));
+        setQuizNames(names);
+      }
     } catch (err) {
       console.error('Error loading stats:', err);
     } finally {
@@ -62,7 +79,7 @@ const MyStats = () => {
               {stats.recentAttempts.map((attempt) => (
                 <div key={attempt.id} className="attempt-row">
                   <div className="attempt-info">
-                    <span className="attempt-quiz">Kviz #{attempt.quizId}</span>
+                    <span className="attempt-quiz">{quizNames[attempt.quizId] || `Kviz #${attempt.quizId}`}</span>
                     <span className="attempt-date">
                       {new Date(attempt.completedAt).toLocaleDateString('sr-Latn')}
                     </span>

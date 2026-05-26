@@ -1,132 +1,138 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import quizService from '../services/quizService';
-import categoryService from '../services/categoryService';
 import './QuizList.css';
+
+const difficultyColors = {
+  Easy: '#4CAF50',
+  Medium: '#FF9800',
+  Hard: '#f44336'
+};
+
+const difficultyLabels = {
+  Easy: 'Lak',
+  Medium: 'Srednji',
+  Hard: 'Težak'
+};
 
 const QuizList = () => {
   const [quizzes, setQuizzes] = useState([]);
-  const [categories, setCategories] = useState([]);
-  const [selectedCategory, setSelectedCategory] = useState('');
-  const [selectedDifficulty, setSelectedDifficulty] = useState('');
-  const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [categoryId, setCategoryId] = useState('');
+  const [difficulty, setDifficulty] = useState('');
+  const [search, setSearch] = useState('');
+  const [categories, setCategories] = useState([]);
+
+  const loadQuizzes = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      let data;
+      if (categoryId || difficulty || search) {
+        data = await quizService.getFiltered(categoryId, difficulty, search);
+      } else {
+        data = await quizService.getAll();
+      }
+      setQuizzes(data.value || data);
+    } catch (err) {
+      console.error('Error loading quizzes:', err);
+      setError('Greška pri učitavanju kvizova.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadCategories = async () => {
+    try {
+      const data = await quizService.getCategories();
+      setCategories(data.value || data);
+    } catch (err) {
+      console.error('Error loading categories:', err);
+    }
+  };
 
   useEffect(() => {
     loadCategories();
     loadQuizzes();
   }, []);
 
-  const loadCategories = async () => {
-    try {
-      const data = await categoryService.getAll();
-      setCategories(data);
-    } catch (err) {
-      console.error('Error loading categories:', err);
-    }
-  };
-
-  const loadQuizzes = async () => {
-    setLoading(true);
-    try {
-      const data = await quizService.getAll();
-      setQuizzes(data);
-    } catch (err) {
-      console.error('Error loading quizzes:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleFilter = async () => {
-    setLoading(true);
-    try {
-      const data = await quizService.getFiltered(
-        selectedCategory || null,
-        selectedDifficulty || null,
-        search || null
-      );
-      setQuizzes(data);
-    } catch (err) {
-      console.error('Error filtering quizzes:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleReset = () => {
-    setSelectedCategory('');
-    setSelectedDifficulty('');
-    setSearch('');
+  const handleFilter = (e) => {
+    e.preventDefault();
     loadQuizzes();
   };
 
-  const getDifficultyBadge = (difficulty) => {
-    const colors = {
-      Easy: '#4caf50',
-      Medium: '#ff9800',
-      Hard: '#f44336',
-    };
-    return (
-      <span className="badge" style={{ background: colors[difficulty] || '#999' }}>
-        {difficulty === 'Easy' ? 'Lako' : difficulty === 'Medium' ? 'Srednje' : 'Teško'}
-      </span>
-    );
+  const handleReset = () => {
+    setCategoryId('');
+    setDifficulty('');
+    setSearch('');
+    setTimeout(() => loadQuizzes(), 0);
   };
 
   return (
     <div className="quiz-list-page">
-      <h1>Kvizovi</h1>
+      <h1>Svi kvizovi</h1>
 
-      <div className="filters">
-        <select value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)}>
+      <form className="filters" onSubmit={handleFilter}>
+        <select
+          value={categoryId}
+          onChange={(e) => setCategoryId(e.target.value)}
+        >
           <option value="">Sve kategorije</option>
-          {categories.map((c) => (
-            <option key={c.id} value={c.id}>{c.name}</option>
+          {categories.map((cat) => (
+            <option key={cat.id} value={cat.id}>{cat.name}</option>
           ))}
         </select>
-
-        <select value={selectedDifficulty} onChange={(e) => setSelectedDifficulty(e.target.value)}>
-          <option value="">Sve težine</option>
-          <option value="Easy">Lako</option>
-          <option value="Medium">Srednje</option>
-          <option value="Hard">Teško</option>
+        <select
+          value={difficulty}
+          onChange={(e) => setDifficulty(e.target.value)}
+        >
+          <option value="">Svi nivoi</option>
+          <option value="Easy">Lak</option>
+          <option value="Medium">Srednji</option>
+          <option value="Hard">Težak</option>
         </select>
-
         <input
           type="text"
           placeholder="Pretraži kvizove..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
+        <button type="submit" className="btn-filter">Filtriraj</button>
+        <button type="button" className="btn-reset" onClick={handleReset}>Reset</button>
+      </form>
 
-        <button onClick={handleFilter} className="btn-filter">Filtriraj</button>
-        <button onClick={handleReset} className="btn-reset">Resetuj</button>
-      </div>
+      {loading && <div className="loading">Učitavanje kvizova...</div>}
+      {error && <div className="no-results">{error}</div>}
 
-      {loading ? (
-        <div className="loading">Učitavanje kvizova...</div>
-      ) : quizzes.length === 0 ? (
-        <div className="no-results">Nema pronađenih kvizova.</div>
-      ) : (
-        <div className="quiz-grid">
-          {quizzes.map((quiz) => (
-            <div key={quiz.id} className="quiz-card">
-              <div className="quiz-card-header">
-                <h3>{quiz.title}</h3>
-                {getDifficultyBadge(quiz.difficulty)}
-              </div>
-              <p className="quiz-description">{quiz.description}</p>
-              <div className="quiz-meta">
-                <span>📁 {quiz.categoryName}</span>
-                <span>❓ {quiz.questionCount} pitanja</span>
-                <span>⏱️ {quiz.timeLimitMinutes} min</span>
-              </div>
-              <Link to={`/quiz/${quiz.id}`} className="btn-play">Igraj</Link>
-            </div>
-          ))}
-        </div>
+      {!loading && !error && quizzes.length === 0 && (
+        <div className="no-results">Nema dostupnih kvizova.</div>
       )}
+
+      <div className="quiz-grid">
+        {quizzes.map((quiz) => (
+          <div key={quiz.id} className="quiz-card">
+            <div className="quiz-card-header">
+              <h3>{quiz.title}</h3>
+              <span
+                className="badge"
+                style={{ backgroundColor: difficultyColors[quiz.difficulty] || '#888' }}
+              >
+                {difficultyLabels[quiz.difficulty] || quiz.difficulty}
+              </span>
+            </div>
+            <p className="quiz-description">{quiz.description}</p>
+            <div className="quiz-meta">
+              <span>📁 {quiz.categoryName}</span>
+              <span>❓ {quiz.questionCount} pitanja</span>
+              <span>⏱️ {quiz.timeLimit} min</span>
+            </div>
+            <Link to={`/quiz/${quiz.id}`} className="btn-play">
+              Igraj kviz
+            </Link>
+          </div>
+        ))}
+      </div>
     </div>
   );
 };

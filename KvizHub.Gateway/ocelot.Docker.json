@@ -10,21 +10,21 @@
       "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE", "OPTIONS" ]
     },
     {
+      "DownstreamPathTemplate": "/api/users",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "user-service", "Port": 80 }
+      ],
+      "UpstreamPathTemplate": "/api/users",
+      "UpstreamHttpMethod": [ "GET", "POST", "OPTIONS" ]
+    },
+    {
       "DownstreamPathTemplate": "/api/users/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         { "Host": "user-service", "Port": 80 }
       ],
       "UpstreamPathTemplate": "/api/users/{everything}",
-      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE", "OPTIONS" ]
-    },
-    {
-      "DownstreamPathTemplate": "/api/categories/{everything}",
-      "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        { "Host": "quiz-service", "Port": 80 }
-      ],
-      "UpstreamPathTemplate": "/api/categories/{everything}",
       "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE", "OPTIONS" ]
     },
     {
@@ -37,12 +37,12 @@
       "UpstreamHttpMethod": [ "GET", "POST", "OPTIONS" ]
     },
     {
-      "DownstreamPathTemplate": "/api/quizzes/{everything}",
+      "DownstreamPathTemplate": "/api/categories/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         { "Host": "quiz-service", "Port": 80 }
       ],
-      "UpstreamPathTemplate": "/api/quizzes/{everything}",
+      "UpstreamPathTemplate": "/api/categories/{everything}",
       "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE", "OPTIONS" ]
     },
     {
@@ -55,21 +55,21 @@
       "UpstreamHttpMethod": [ "GET", "POST", "OPTIONS" ]
     },
     {
+      "DownstreamPathTemplate": "/api/quizzes/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "quiz-service", "Port": 80 }
+      ],
+      "UpstreamPathTemplate": "/api/quizzes/{everything}",
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE", "OPTIONS" ]
+    },
+    {
       "DownstreamPathTemplate": "/api/questions/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         { "Host": "quiz-service", "Port": 80 }
       ],
       "UpstreamPathTemplate": "/api/questions/{everything}",
-      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE", "OPTIONS" ]
-    },
-    {
-      "DownstreamPathTemplate": "/api/attempts/{everything}",
-      "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        { "Host": "score-service", "Port": 80 }
-      ],
-      "UpstreamPathTemplate": "/api/attempts/{everything}",
       "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE", "OPTIONS" ]
     },
     {
@@ -82,13 +82,13 @@
       "UpstreamHttpMethod": [ "GET", "POST", "OPTIONS" ]
     },
     {
-      "DownstreamPathTemplate": "/api/leaderboard/{everything}",
+      "DownstreamPathTemplate": "/api/attempts/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         { "Host": "score-service", "Port": 80 }
       ],
-      "UpstreamPathTemplate": "/api/leaderboard/{everything}",
-      "UpstreamHttpMethod": [ "GET", "OPTIONS" ]
+      "UpstreamPathTemplate": "/api/attempts/{everything}",
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE", "OPTIONS" ]
     },
     {
       "DownstreamPathTemplate": "/api/leaderboard",
@@ -98,9 +98,19 @@
       ],
       "UpstreamPathTemplate": "/api/leaderboard",
       "UpstreamHttpMethod": [ "GET", "OPTIONS" ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/leaderboard/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "score-service", "Port": 80 }
+      ],
+      "UpstreamPathTemplate": "/api/leaderboard/{everything}",
+      "UpstreamHttpMethod": [ "GET", "OPTIONS" ]
     }
   ],
-  "GlobalConfiguration": {
-    "BaseUrl": "http://gateway:80"
-  }
+    "GlobalConfiguration": {
+      "BaseUrl": "http://gateway:80"
+    }
 }
+

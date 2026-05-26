@@ -25,7 +25,7 @@ namespace KvizHub.UserService.Controllers
             return Ok(user);
         }
 
-        [Authorize(Roles = "Admin")]
+                [Authorize]
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
