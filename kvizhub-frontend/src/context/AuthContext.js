@@ -17,15 +17,27 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   }, []);
 
-  const login = async (username, password) => {
-    const data = await authService.login(username, password);
-    const userData = { id: data.userId, username: data.username, role: data.role };
+  const login = async (usernameOrEmail, password) => {
+    const data = await authService.login(usernameOrEmail, password);
+    const userData = { id: data.userId, username: data.username, email: data.email, role: data.role };
     setUser(userData);
     return data;
   };
 
   const register = async (username, email, password) => {
-    return await authService.register(username, email, password);
+    const data = await authService.register(username, email, password);
+    if (data.accessToken) {
+      localStorage.setItem('token', data.accessToken);
+      localStorage.setItem('refreshToken', data.refreshToken);
+      localStorage.setItem('user', JSON.stringify({
+        id: data.userId,
+        username: data.username,
+        email: data.email,
+        role: data.role,
+      }));
+      setUser({ id: data.userId, username: data.username, email: data.email, role: data.role });
+    }
+    return data;
   };
 
   const logout = () => {

@@ -20,7 +20,13 @@ const Login = () => {
       await login(username, password);
       navigate('/');
     } catch (err) {
-      setError(err.response?.data?.message || 'Greška pri prijavi. Proverite podatke.');
+      const data = err.response?.data;
+      if (data?.errors) {
+        const msgs = Object.values(data.errors).flat();
+        setError(msgs.join(' '));
+      } else {
+        setError(data?.message || 'Greška pri prijavi. Proverite podatke.');
+      }
     } finally {
       setLoading(false);
     }

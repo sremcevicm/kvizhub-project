@@ -6,14 +6,15 @@ const authService = {
     return response.data;
   },
 
-  login: async (username, password) => {
-    const response = await api.post('/api/auth/login', { username, password });
-    if (response.data.token) {
-      localStorage.setItem('token', response.data.token);
+  login: async (usernameOrEmail, password) => {
+    const response = await api.post('/api/auth/login', { usernameOrEmail, password });
+    if (response.data.accessToken) {
+      localStorage.setItem('token', response.data.accessToken);
       localStorage.setItem('refreshToken', response.data.refreshToken);
       localStorage.setItem('user', JSON.stringify({
         id: response.data.userId,
         username: response.data.username,
+        email: response.data.email,
         role: response.data.role,
       }));
     }

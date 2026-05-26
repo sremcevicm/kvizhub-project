@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace KvizHub.UserService.Models.DTOs
 {
@@ -18,11 +19,20 @@ namespace KvizHub.UserService.Models.DTOs
 
     public class LoginRequestDto
     {
-        [Required]
-        public string UsernameOrEmail { get; set; } = string.Empty;
+        // Accepts "usernameOrEmail" from JSON
+        public string? UsernameOrEmail { get; set; }
+
+        // Also accepts "username" from JSON (fallback)
+        public string? Username { get; set; }
 
         [Required]
         public string Password { get; set; } = string.Empty;
+
+        // Resolved value: prefer UsernameOrEmail, fall back to Username
+        [JsonIgnore]
+        public string ResolvedLogin => !string.IsNullOrEmpty(UsernameOrEmail) 
+            ? UsernameOrEmail 
+            : Username ?? string.Empty;
     }
 
     public class AuthResponseDto

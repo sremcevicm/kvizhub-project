@@ -61,7 +61,7 @@ namespace KvizHub.UserService.Services
 
         public async Task<AuthResponseDto> LoginAsync(LoginRequestDto request)
         {
-            var user = await _userRepository.GetByUsernameOrEmailAsync(request.UsernameOrEmail);
+            var user = await _userRepository.GetByUsernameOrEmailAsync(request.ResolvedLogin);
             if (user == null || !BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
                 throw new UnauthorizedAccessException("Pogrešno korisničko ime/email ili lozinka.");
 

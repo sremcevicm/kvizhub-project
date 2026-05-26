@@ -24,17 +24,27 @@ namespace KvizHub.ScoreService.Services
         public async Task<List<LeaderboardEntryDto>> GetGlobalLeaderboardAsync(string accessToken, int top = 20)
         {
             var allAttempts = await _attemptRepository.GetAllAsync();
+            if (!allAttempts.Any())
+                return new List<LeaderboardEntryDto>();
 
-            // Get all users for username lookup
-            var users = await _userDataClient.GetAllUsersAsync(accessToken);
-            var userMap = users.ToDictionary(u => u.Id, u => u.Username);
+            // Try to get usernames, fall back to "User #id" if unavailable
+            Dictionary<int, string> userMap = new();
+            try
+            {
+                if (!string.IsNullOrEmpty(accessToken))
+                {
+                    var users = await _userDataClient.GetAllUsersAsync(accessToken);
+                    userMap = users.ToDictionary(u => u.Id, u => u.Username);
+                }
+            }
+            catch { /* UserService unavailable or auth failed */ }
 
             var grouped = allAttempts
                 .GroupBy(a => a.UserId)
                 .Select(g => new LeaderboardEntryDto
                 {
                     UserId = g.Key,
-                    Username = userMap.GetValueOrDefault(g.Key, "Unknown"),
+                    Username = userMap.GetValueOrDefault(g.Key, $"User #{g.Key}"),
                     TotalScore = g.Sum(a => a.Score),
                     QuizzesCompleted = g.Count(),
                     AveragePercentage = Math.Round(
@@ -55,9 +65,19 @@ namespace KvizHub.ScoreService.Services
         public async Task<List<QuizLeaderboardEntryDto>> GetQuizLeaderboardAsync(int quizId, string accessToken, int top = 20)
         {
             var quizAttempts = await _attemptRepository.GetByQuizIdAsync(quizId);
+            if (!quizAttempts.Any())
+                return new List<QuizLeaderboardEntryDto>();
 
-            var users = await _userDataClient.GetAllUsersAsync(accessToken);
-            var userMap = users.ToDictionary(u => u.Id, u => u.Username);
+            Dictionary<int, string> userMap = new();
+            try
+            {
+                if (!string.IsNullOrEmpty(accessToken))
+                {
+                    var users = await _userDataClient.GetAllUsersAsync(accessToken);
+                    userMap = users.ToDictionary(u => u.Id, u => u.Username);
+                }
+            }
+            catch { /* UserService unavailable or auth failed */ }
 
             // Best attempt per user for this quiz
             var grouped = quizAttempts
@@ -68,7 +88,7 @@ namespace KvizHub.ScoreService.Services
                     return new QuizLeaderboardEntryDto
                     {
                         UserId = g.Key,
-                        Username = userMap.GetValueOrDefault(g.Key, "Unknown"),
+                        Username = userMap.GetValueOrDefault(g.Key, $"User #{g.Key}"),
                         BestScore = best.Score,
                         TimeTakenSeconds = best.TimeTakenSeconds,
                         CompletedAt = best.CompletedAt

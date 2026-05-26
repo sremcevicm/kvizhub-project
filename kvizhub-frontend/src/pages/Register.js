@@ -26,9 +26,16 @@ const Register = () => {
 
     try {
       await register(username, email, password);
-      navigate('/login');
+      navigate('/');
     } catch (err) {
-      setError(err.response?.data?.message || 'Greška pri registraciji.');
+      const data = err.response?.data;
+      if (data?.errors) {
+        // ASP.NET model validation errors
+        const msgs = Object.values(data.errors).flat();
+        setError(msgs.join(' '));
+      } else {
+        setError(data?.message || 'Greška pri registraciji.');
+      }
     } finally {
       setLoading(false);
     }
