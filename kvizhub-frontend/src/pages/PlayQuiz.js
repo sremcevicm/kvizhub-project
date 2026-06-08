@@ -24,7 +24,7 @@ const PlayQuiz = () => {
     try {
       const quizData = await quizService.getById(id);
       setQuiz(quizData);
-      setTimeLeft(quizData.timeLimit * 60);
+      setTimeLeft(quizData.timeLimitSeconds);
     } catch (err) {
       console.error('Error loading quiz:', err);
     } finally {
@@ -54,7 +54,7 @@ const PlayQuiz = () => {
     if (submitting) return;
     setSubmitting(true);
 
-    const timeTaken = quiz.timeLimit * 60 - timeLeft;
+    const timeTaken = quiz.timeLimitSeconds - timeLeft;
     const answerList = Object.entries(answers).map(([questionId, answerId]) => ({
       questionId: parseInt(questionId),
       selectedAnswerId: answerId,
@@ -115,7 +115,7 @@ const PlayQuiz = () => {
           <div className="result-details">
             <p>Tačnih odgovora: <strong>{result.correctAnswers}/{result.totalQuestions}</strong></p>
             <p>Bodovi: <strong>{result.score}</strong></p>
-            <p>Vreme: <strong>{formatTime(result.timeTakenSeconds)}</strong></p>
+            <p>Vreme: <strong>{result.timeFormatted}</strong></p>
           </div>
           <div className="result-actions">
             <button onClick={() => navigate('/quizzes')} className="btn-back">Nazad na kvizove</button>

@@ -4,7 +4,7 @@ import quizService from '../services/quizService';
 import './MyStats.css';
 
 const MyStats = () => {
-    const [stats, setStats] = useState(null);
+  const [stats, setStats] = useState(null);
   const [quizNames, setQuizNames] = useState({});
   const [loading, setLoading] = useState(true);
 
@@ -36,12 +36,6 @@ const MyStats = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const formatTime = (seconds) => {
-    const m = Math.floor(seconds / 60);
-    const s = seconds % 60;
-    return `${m}:${s.toString().padStart(2, '0')}`;
   };
 
   if (loading) return <div className="my-stats"><div className="loading">Učitavanje...</div></div>;
@@ -80,14 +74,12 @@ const MyStats = () => {
                 <div key={attempt.id} className="attempt-row">
                   <div className="attempt-info">
                     <span className="attempt-quiz">{quizNames[attempt.quizId] || `Kviz #${attempt.quizId}`}</span>
-                    <span className="attempt-date">
-                      {new Date(attempt.completedAt).toLocaleDateString('sr-Latn')}
-                    </span>
+                    <span className="attempt-date">{attempt.dateFormatted}</span>
                   </div>
                   <div className="attempt-result">
                     <span className="attempt-score">{attempt.percentage}%</span>
                     <span className="attempt-details">
-                      {attempt.correctAnswers}/{attempt.totalQuestions} · {formatTime(attempt.timeTakenSeconds)}
+                      {attempt.correctAnswers}/{attempt.totalQuestions} · {attempt.timeFormatted}
                     </span>
                   </div>
                 </div>

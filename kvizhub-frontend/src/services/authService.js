@@ -1,24 +1,26 @@
 import api from './api';
+import { User, LoginResponse } from '../models/User';
 
 const authService = {
   register: async (username, email, password) => {
     const response = await api.post('/api/auth/register', { username, email, password });
-    return response.data;
+    return new LoginResponse(response.data);
   },
 
   login: async (usernameOrEmail, password) => {
     const response = await api.post('/api/auth/login', { usernameOrEmail, password });
-    if (response.data.accessToken) {
-      localStorage.setItem('token', response.data.accessToken);
-      localStorage.setItem('refreshToken', response.data.refreshToken);
+    const data = new LoginResponse(response.data);
+    if (data.accessToken) {
+      localStorage.setItem('token', data.accessToken);
+      localStorage.setItem('refreshToken', data.refreshToken);
       localStorage.setItem('user', JSON.stringify({
-        id: response.data.userId,
-        username: response.data.username,
-        email: response.data.email,
-        role: response.data.role,
+        id: data.userId,
+        username: data.username,
+        email: data.email,
+        role: data.role,
       }));
     }
-    return response.data;
+    return data;
   },
 
   logout: () => {
@@ -36,12 +38,12 @@ const authService = {
 
   getProfile: async () => {
     const response = await api.get('/api/users/me');
-    return response.data;
+    return new User(response.data);
   },
 
   updateProfile: async (data) => {
     const response = await api.put('/api/users/me', data);
-    return response.data;
+    return new User(response.data);
   },
 };
 

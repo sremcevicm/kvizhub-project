@@ -9,12 +9,6 @@ const difficultyColors = {
   Hard: '#f44336'
 };
 
-const difficultyLabels = {
-  Easy: 'Lak',
-  Medium: 'Srednji',
-  Hard: 'Težak'
-};
-
 const QuizList = () => {
   const [quizzes, setQuizzes] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -28,13 +22,10 @@ const QuizList = () => {
     setLoading(true);
     setError(null);
     try {
-      let data;
-      if (categoryId || difficulty || search) {
-        data = await quizService.getFiltered(categoryId, difficulty, search);
-      } else {
-        data = await quizService.getAll();
-      }
-      setQuizzes(data.value || data);
+      const items = categoryId || difficulty || search
+        ? await quizService.getFiltered(categoryId, difficulty, search)
+        : await quizService.getAll();
+      setQuizzes(items);
     } catch (err) {
       console.error('Error loading quizzes:', err);
       setError('Greška pri učitavanju kvizova.');
@@ -45,16 +36,17 @@ const QuizList = () => {
 
   const loadCategories = async () => {
     try {
-      const data = await quizService.getCategories();
-      setCategories(data.value || data);
+      const items = await quizService.getCategories();
+      setCategories(items);
     } catch (err) {
       console.error('Error loading categories:', err);
     }
   };
 
-  useEffect(() => {
+    useEffect(() => {
     loadCategories();
     loadQuizzes();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleFilter = (e) => {
@@ -118,7 +110,7 @@ const QuizList = () => {
                 className="badge"
                 style={{ backgroundColor: difficultyColors[quiz.difficulty] || '#888' }}
               >
-                {difficultyLabels[quiz.difficulty] || quiz.difficulty}
+                {quiz.difficultyLabel}
               </span>
             </div>
             <p className="quiz-description">{quiz.description}</p>

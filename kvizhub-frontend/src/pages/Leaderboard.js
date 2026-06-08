@@ -11,13 +11,10 @@ const Leaderboard = () => {
   const loadLeaderboard = useCallback(async () => {
     setLoading(true);
     try {
-      if (quizId) {
-        const data = await scoreService.getQuizLeaderboard(quizId);
-        setEntries(data);
-      } else {
-        const data = await scoreService.getGlobalLeaderboard();
-        setEntries(data);
-      }
+      const data = quizId
+        ? await scoreService.getQuizLeaderboard(quizId)
+        : await scoreService.getGlobalLeaderboard();
+      setEntries(data);
     } catch (err) {
       console.error('Error loading leaderboard:', err);
     } finally {
@@ -28,13 +25,6 @@ const Leaderboard = () => {
   useEffect(() => {
     loadLeaderboard();
   }, [loadLeaderboard]);
-
-  const getMedalEmoji = (rank) => {
-    if (rank === 1) return '🥇';
-    if (rank === 2) return '🥈';
-    if (rank === 3) return '🥉';
-    return rank;
-  };
 
   return (
     <div className="leaderboard-page">
@@ -69,20 +59,18 @@ const Leaderboard = () => {
 
           {entries.map((entry) => (
             <div key={entry.userId} className={`table-row ${entry.rank <= 3 ? 'top-three' : ''}`}>
-              <span className="col-rank">{getMedalEmoji(entry.rank)}</span>
+              <span className="col-rank">{entry.medal || entry.rank}</span>
               <span className="col-name">{entry.username}</span>
               {quizId ? (
                 <>
-                  <span className="col-score">{entry.bestScore}%</span>
-                  <span className="col-time">
-                    {Math.floor(entry.timeTakenSeconds / 60)}:{(entry.timeTakenSeconds % 60).toString().padStart(2, '0')}
-                  </span>
+                  <span className="col-score">{entry.formattedScore}</span>
+                  <span className="col-time">{entry.timeFormatted}</span>
                 </>
               ) : (
                 <>
                   <span className="col-score">{entry.totalScore}</span>
                   <span className="col-quizzes">{entry.quizzesCompleted}</span>
-                  <span className="col-avg">{entry.averagePercentage}%</span>
+                  <span className="col-avg">{entry.formattedPercentage}</span>
                 </>
               )}
             </div>
