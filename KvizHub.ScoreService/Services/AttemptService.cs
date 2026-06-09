@@ -26,29 +26,35 @@ namespace KvizHub.ScoreService.Services
 
         public async Task<AttemptResultDto> SubmitAttemptAsync(int userId, SubmitAttemptDto dto, string accessToken)
         {
-            // Get correct answers from QuizService
+            // Get correct answers from QuizService (now includes QuestionType and answer text)
             var questions = await _quizDataClient.GetQuestionsWithAnswersAsync(dto.QuizId, accessToken);
 
-            var correctMap = new Dictionary<int, HashSet<int>>();
-            foreach (var q in questions)
-            {
-                correctMap[q.Id] = q.Answers.Where(a => a.IsCorrect).Select(a => a.Id).ToHashSet();
-            }
+            // Build lookup: questionId -> (questionType, correctAnswerIds, correctAnswerText)
+            var questionLookup = questions.ToDictionary(
+                q => q.Id,
+                q => (
+                    Type: q.QuestionType,
+                    CorrectIds: q.Answers.Where(a => a.IsCorrect).Select(a => a.Id).ToHashSet(),
+                    CorrectText: q.Answers.Where(a => a.IsCorrect).Select(a => a.Text).FirstOrDefault() ?? ""
+                )
+            );
 
             int correctCount = 0;
             var attemptAnswers = new List<AttemptAnswer>();
 
             foreach (var answer in dto.Answers)
             {
-                bool isCorrect = correctMap.ContainsKey(answer.QuestionId) &&
-                                 correctMap[answer.QuestionId].Contains(answer.SelectedAnswerId);
-
+                bool isCorrect = EvaluateAnswer(answer, questionLookup);
                 if (isCorrect) correctCount++;
 
                 attemptAnswers.Add(new AttemptAnswer
                 {
                     QuestionId = answer.QuestionId,
                     SelectedAnswerId = answer.SelectedAnswerId,
+                    SelectedAnswerIdsCsv = answer.SelectedAnswerIds?.Count > 0
+                        ? string.Join(",", answer.SelectedAnswerIds)
+                        : null,
+                    TextAnswer = answer.TextAnswer,
                     IsCorrect = isCorrect
                 });
             }
@@ -74,6 +80,39 @@ namespace KvizHub.ScoreService.Services
             await _attemptRepository.CreateAsync(attempt);
 
             return MapToResultDto(attempt);
+        }
+
+        /// <summary>
+        /// Evaluates whether the user's answer is correct based on question type.
+        /// </summary>
+        private static bool EvaluateAnswer(
+            SubmitAnswerDto answer,
+            Dictionary<int, (string Type, HashSet<int> CorrectIds, string CorrectText)> lookup)
+        {
+            if (!lookup.TryGetValue(answer.QuestionId, out var info))
+                return false;
+
+            return info.Type switch
+            {
+                // SingleChoice & TrueFalse: compare selectedAnswerId against the set of correct IDs
+                "SingleChoice" or "TrueFalse" =>
+                    info.CorrectIds.Contains(answer.SelectedAnswerId),
+
+                // MultipleChoice: all selected IDs must match all correct IDs (order doesn't matter)
+                "MultipleChoice" =>
+                    info.CorrectIds.SetEquals(answer.SelectedAnswerIds ?? new List<int>()),
+
+                // FillInBlank: case-insensitive text comparison, trimmed
+                "FillInBlank" =>
+                    !string.IsNullOrWhiteSpace(answer.TextAnswer) &&
+                    string.Equals(
+                        answer.TextAnswer.Trim(),
+                        info.CorrectText.Trim(),
+                        StringComparison.OrdinalIgnoreCase),
+
+                // Unknown type – treat as incorrect
+                _ => false
+            };
         }
 
         public async Task<AttemptResultDto?> GetAttemptByIdAsync(int id)
@@ -123,6 +162,10 @@ namespace KvizHub.ScoreService.Services
             {
                 QuestionId = a.QuestionId,
                 SelectedAnswerId = a.SelectedAnswerId,
+                SelectedAnswerIds = !string.IsNullOrEmpty(a.SelectedAnswerIdsCsv)
+                    ? a.SelectedAnswerIdsCsv.Split(',').Select(int.Parse).ToList()
+                    : new List<int>(),
+                TextAnswer = a.TextAnswer,
                 IsCorrect = a.IsCorrect
             }).ToList()
         };

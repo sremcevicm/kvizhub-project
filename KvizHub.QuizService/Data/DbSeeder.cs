@@ -724,8 +724,143 @@ namespace KvizHub.QuizService.Data
                 }
             };
 
+            // =============================================
+            // KVIZ 10: Sve vrste pitanja
+            // =============================================
+            var quiz10 = new Quiz
+            {
+                Title = "Sve vrste pitanja",
+                Description = "Kviz sa svim tipovima pitanja: SingleChoice, MultipleChoice, True/False i unos teksta",
+                CategoryId = 4,
+                Difficulty = "Medium",
+                TimeLimit = 15,
+                CreatedByUserId = adminUserId,
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow,
+                Questions = new List<Question>
+                {
+                    // 1. SingleChoice
+                    new Question
+                    {
+                        Text = "Koji je glavni grad Srbije?",
+                        QuestionType = "SingleChoice",
+                        DifficultyLevel = "Easy",
+                        Order = 1,
+                        Answers = new List<Answer>
+                        {
+                            new Answer { Text = "Beograd", IsCorrect = true, Order = 1 },
+                            new Answer { Text = "Novi Sad", IsCorrect = false, Order = 2 },
+                            new Answer { Text = "Nis", IsCorrect = false, Order = 3 },
+                            new Answer { Text = "Kragujevac", IsCorrect = false, Order = 4 }
+                        }
+                    },
+                    // 2. MultipleChoice
+                    new Question
+                    {
+                        Text = "Koji od navedenih su programski jezici? (Izaberi SVE tacne)",
+                        QuestionType = "MultipleChoice",
+                        DifficultyLevel = "Easy",
+                        Order = 2,
+                        Answers = new List<Answer>
+                        {
+                            new Answer { Text = "Python", IsCorrect = true, Order = 1 },
+                            new Answer { Text = "JavaScript", IsCorrect = true, Order = 2 },
+                            new Answer { Text = "HTML", IsCorrect = false, Order = 3 },
+                            new Answer { Text = "Java", IsCorrect = true, Order = 4 },
+                            new Answer { Text = "CSS", IsCorrect = false, Order = 5 }
+                        }
+                    },
+                    // 3. TrueFalse
+                    new Question
+                    {
+                        Text = "Zemlja je ravna ploca.",
+                        QuestionType = "TrueFalse",
+                        DifficultyLevel = "Easy",
+                        Order = 3,
+                        Answers = new List<Answer>
+                        {
+                            new Answer { Text = "Tacno", IsCorrect = false, Order = 1 },
+                            new Answer { Text = "Netacno", IsCorrect = true, Order = 2 }
+                        }
+                    },
+                    // 4. FillInBlank
+                    new Question
+                    {
+                        Text = "Koji planet je poznat kao 'Crvena planeta'? (unesite odgovor)",
+                        QuestionType = "FillInBlank",
+                        DifficultyLevel = "Easy",
+                        Order = 4,
+                        Answers = new List<Answer>
+                        {
+                            new Answer { Text = "Mars", IsCorrect = true, Order = 1 },
+                            new Answer { Text = "mars", IsCorrect = true, Order = 2 },
+                            new Answer { Text = "MARS", IsCorrect = true, Order = 3 }
+                        }
+                    },
+                    // 5. SingleChoice
+                    new Question
+                    {
+                        Text = "Koja je valuta u Japanu?",
+                        QuestionType = "SingleChoice",
+                        DifficultyLevel = "Medium",
+                        Order = 5,
+                        Answers = new List<Answer>
+                        {
+                            new Answer { Text = "Jen", IsCorrect = true, Order = 1 },
+                            new Answer { Text = "Juan", IsCorrect = false, Order = 2 },
+                            new Answer { Text = "Von", IsCorrect = false, Order = 3 },
+                            new Answer { Text = "Dolar", IsCorrect = false, Order = 4 }
+                        }
+                    },
+                    // 6. MultipleChoice
+                    new Question
+                    {
+                        Text = "Koji su od navedenih browser-i? (Izaberi SVE)",
+                        QuestionType = "MultipleChoice",
+                        DifficultyLevel = "Easy",
+                        Order = 6,
+                        Answers = new List<Answer>
+                        {
+                            new Answer { Text = "Chrome", IsCorrect = true, Order = 1 },
+                            new Answer { Text = "Firefox", IsCorrect = true, Order = 2 },
+                            new Answer { Text = "Windows", IsCorrect = false, Order = 3 },
+                            new Answer { Text = "Edge", IsCorrect = true, Order = 4 },
+                            new Answer { Text = "Safari", IsCorrect = true, Order = 5 }
+                        }
+                    },
+                    // 7. TrueFalse
+                    new Question
+                    {
+                        Text = "Voda kljuca na 100 stepeni Celzijusa na nivou mora.",
+                        QuestionType = "TrueFalse",
+                        DifficultyLevel = "Medium",
+                        Order = 7,
+                        Answers = new List<Answer>
+                        {
+                            new Answer { Text = "Tacno", IsCorrect = true, Order = 1 },
+                            new Answer { Text = "Netacno", IsCorrect = false, Order = 2 }
+                        }
+                    },
+                    // 8. FillInBlank
+                    new Question
+                    {
+                        Text = "Koji element ima hemijski simbol 'O'? (unesite odgovor)",
+                        QuestionType = "FillInBlank",
+                        DifficultyLevel = "Easy",
+                        Order = 8,
+                        Answers = new List<Answer>
+                        {
+                            new Answer { Text = "Kiseonik", IsCorrect = true, Order = 1 },
+                            new Answer { Text = "kiseonik", IsCorrect = true, Order = 2 },
+                            new Answer { Text = "Oxygen", IsCorrect = true, Order = 3 },
+                            new Answer { Text = "oxygen", IsCorrect = true, Order = 4 }
+                        }
+                    }
+                }
+            };
+
             // Add all quizzes to context
-            context.Quizzes.AddRange(quiz1, quiz2, quiz3, quiz4, quiz5, quiz6, quiz7, quiz8, quiz9);
+            context.Quizzes.AddRange(quiz1, quiz2, quiz3, quiz4, quiz5, quiz6, quiz7, quiz8, quiz9, quiz10);
             await context.SaveChangesAsync();
         }
     }

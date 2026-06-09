@@ -8,10 +8,24 @@ namespace KvizHub.ScoreService.Models.DTOs
         public List<SubmitAnswerDto> Answers { get; set; } = new();
     }
 
-    public class SubmitAnswerDto
+        public class SubmitAnswerDto
     {
         public int QuestionId { get; set; }
+
+        /// <summary>
+        /// Selected answer ID for SingleChoice / TrueFalse.
+        /// </summary>
         public int SelectedAnswerId { get; set; }
+
+        /// <summary>
+        /// Selected answer IDs for MultipleChoice questions.
+        /// </summary>
+        public List<int> SelectedAnswerIds { get; set; } = new();
+
+        /// <summary>
+        /// Text answer for FillInBlank questions.
+        /// </summary>
+        public string? TextAnswer { get; set; }
     }
 
     // Attempt result
@@ -33,6 +47,14 @@ namespace KvizHub.ScoreService.Models.DTOs
     {
         public int QuestionId { get; set; }
         public int SelectedAnswerId { get; set; }
+        /// <summary>
+        /// Selected answer IDs for MultipleChoice.
+        /// </summary>
+        public List<int> SelectedAnswerIds { get; set; } = new();
+        /// <summary>
+        /// Text answer for FillInBlank.
+        /// </summary>
+        public string? TextAnswer { get; set; }
         public bool IsCorrect { get; set; }
     }
 
@@ -68,16 +90,21 @@ namespace KvizHub.ScoreService.Models.DTOs
         public List<AttemptResultDto> RecentAttempts { get; set; } = new();
     }
 
-    // Internal DTOs for inter-service communication
+        // Internal DTOs for inter-service communication
     public class QuestionWithAnswersDto
     {
         public int Id { get; set; }
+        /// <summary>
+        /// Question type: SingleChoice, MultipleChoice, TrueFalse, FillInBlank
+        /// </summary>
+        public string QuestionType { get; set; } = "SingleChoice";
         public List<AnswerCheckDto> Answers { get; set; } = new();
     }
 
     public class AnswerCheckDto
     {
         public int Id { get; set; }
+        public string Text { get; set; } = string.Empty;
         public bool IsCorrect { get; set; }
     }
 
