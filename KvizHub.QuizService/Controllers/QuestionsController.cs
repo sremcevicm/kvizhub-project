@@ -17,6 +17,13 @@ namespace KvizHub.QuizService.Controllers
             _questionService = questionService;
         }
 
+                [HttpGet("quiz/{quizId}")]
+        public async Task<ActionResult<List<QuestionDto>>> GetByQuizId(int quizId)
+        {
+            var questions = await _questionService.GetByQuizIdAsync(quizId);
+            return Ok(questions);
+        }
+
         [HttpPost("quiz/{quizId}")]
         public async Task<ActionResult<QuestionDto>> Create(int quizId, [FromBody] CreateQuestionDto dto)
         {
@@ -24,11 +31,13 @@ namespace KvizHub.QuizService.Controllers
             return CreatedAtAction(nameof(GetById), new { id = question.Id }, question);
         }
 
-        [HttpGet("{id}")]
+                [HttpGet("{id}")]
         [AllowAnonymous]
         public async Task<ActionResult<QuestionDto>> GetById(int id)
         {
-            return Ok();
+            var question = await _questionService.GetByIdAsync(id);
+            if (question == null) return NotFound();
+            return Ok(question);
         }
 
         [HttpPut("{id}")]

@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import quizService from '../services/quizService';
 import scoreService from '../services/scoreService';
 import { useAuth } from '../context/AuthContext';
+import { QuestionType } from '../models/Question';
 import './PlayQuiz.css';
 
 const PlayQuiz = () => {
@@ -50,15 +51,46 @@ const PlayQuiz = () => {
     }
   };
 
+  // Build the answer payload for submitting
+  const buildAnswerList = () => {
+    return questions.map((q) => {
+      const ans = answers[q.id] || {};
+      const base = { questionId: q.id };
+
+      switch (q.questionType) {
+        case QuestionType.MULTIPLE_CHOICE:
+          return {
+            ...base,
+            selectedAnswerId: 0,
+            selectedAnswerIds: ans.selectedAnswerIds || [],
+            textAnswer: ''
+          };
+        case QuestionType.FILL_IN_BLANK:
+          return {
+            ...base,
+            selectedAnswerId: 0,
+            selectedAnswerIds: [],
+            textAnswer: ans.textAnswer || ''
+          };
+        case QuestionType.SINGLE_CHOICE:
+        case QuestionType.TRUE_FALSE:
+        default:
+          return {
+            ...base,
+            selectedAnswerId: ans.selectedAnswerId || 0,
+            selectedAnswerIds: [],
+            textAnswer: ''
+          };
+      }
+    });
+  };
+
   const handleSubmit = useCallback(async () => {
     if (submitting) return;
     setSubmitting(true);
 
     const timeTaken = quiz.timeLimitSeconds - timeLeft;
-    const answerList = Object.entries(answers).map(([questionId, answerId]) => ({
-      questionId: parseInt(questionId),
-      selectedAnswerId: answerId,
-    }));
+    const answerList = buildAnswerList();
 
     try {
       const attemptResult = await scoreService.submitAttempt({
@@ -73,7 +105,8 @@ const PlayQuiz = () => {
     } finally {
       setSubmitting(false);
     }
-  }, [submitting, quiz, timeLeft, answers, id]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [submitting, quiz, timeLeft, id, answers, questions]);
 
   // Timer
   useEffect(() => {
@@ -93,14 +126,124 @@ const PlayQuiz = () => {
     return () => clearInterval(timer);
   }, [started, result, handleSubmit]);
 
-  const selectAnswer = (questionId, answerId) => {
-    setAnswers((prev) => ({ ...prev, [questionId]: answerId }));
+  // ---- Answer handlers for each question type ----
+
+  // SingleChoice / TrueFalse: select one answer
+  const selectSingleAnswer = (questionId, answerId) => {
+    setAnswers((prev) => ({
+      ...prev,
+      [questionId]: { ...prev[questionId], selectedAnswerId: answerId }
+    }));
+  };
+
+  // MultipleChoice: toggle an answer in the set
+  const toggleMultipleAnswer = (questionId, answerId) => {
+    setAnswers((prev) => {
+      const current = prev[questionId]?.selectedAnswerIds || [];
+      const updated = current.includes(answerId)
+        ? current.filter((id) => id !== answerId)
+        : [...current, answerId];
+      return { ...prev, [questionId]: { ...prev[questionId], selectedAnswerIds: updated } };
+    });
+  };
+
+  // FillInBlank: store text input
+  const setTextAnswer = (questionId, text) => {
+    setAnswers((prev) => ({
+      ...prev,
+      [questionId]: { ...prev[questionId], textAnswer: text }
+    }));
   };
 
   const formatTime = (seconds) => {
     const m = Math.floor(seconds / 60);
     const s = seconds % 60;
     return `${m}:${s.toString().padStart(2, '0')}`;
+  };
+
+  // ---- Render helpers ----
+
+  const renderQuestionTypeLabel = (type) => {
+    const labels = {
+      [QuestionType.SINGLE_CHOICE]: 'Jedan tačan odgovor',
+      [QuestionType.MULTIPLE_CHOICE]: 'Više tačnih odgovora',
+      [QuestionType.TRUE_FALSE]: 'Tačno / Netačno',
+      [QuestionType.FILL_IN_BLANK]: 'Unesite odgovor'
+    };
+    return labels[type] || type;
+  };
+
+  const renderAnswers = (question) => {
+    const qId = question.id;
+    const ansData = answers[qId] || {};
+
+    switch (question.questionType) {
+      // SingleChoice & TrueFalse: single-select buttons
+      case QuestionType.SINGLE_CHOICE:
+      case QuestionType.TRUE_FALSE:
+        return question.answers.map((answer) => (
+          <button
+            key={answer.id}
+            className={`answer-btn ${ansData.selectedAnswerId === answer.id ? 'selected' : ''}`}
+            onClick={() => selectSingleAnswer(qId, answer.id)}
+          >
+            {answer.text}
+          </button>
+        ));
+
+      // MultipleChoice: toggle buttons (checkbox style)
+      case QuestionType.MULTIPLE_CHOICE:
+        return question.answers.map((answer) => {
+          const isSelected = (ansData.selectedAnswerIds || []).includes(answer.id);
+          return (
+            <button
+              key={answer.id}
+              className={`answer-btn answer-btn-multi ${isSelected ? 'selected' : ''}`}
+              onClick={() => toggleMultipleAnswer(qId, answer.id)}
+            >
+              <span className="checkbox-indicator">{isSelected ? '☑' : '☐'}</span>
+              {answer.text}
+            </button>
+          );
+        });
+
+      // FillInBlank: text input
+      case QuestionType.FILL_IN_BLANK:
+        return (
+          <div className="fill-blank-input-wrap">
+            <input
+              type="text"
+              className="fill-blank-input"
+              placeholder="Upišite svoj odgovor..."
+              value={ansData.textAnswer || ''}
+              onChange={(e) => setTextAnswer(qId, e.target.value)}
+              autoFocus
+            />
+          </div>
+        );
+
+      default:
+        return <p className="unsupported-type">Nepodržan tip pitanja: {question.questionType}</p>;
+    }
+  };
+
+  const isQuestionAnswered = (questionId) => {
+    const a = answers[questionId];
+    if (!a) return false;
+    const q = questions.find((qq) => qq.id === questionId);
+    if (!q) return false;
+
+    switch (q.questionType) {
+      case QuestionType.SINGLE_CHOICE:
+      case QuestionType.TRUE_FALSE:
+        return !!a.selectedAnswerId;
+      case QuestionType.MULTIPLE_CHOICE:
+        return (a.selectedAnswerIds || []).length > 0;
+      case QuestionType.FILL_IN_BLANK:
+        return !!(a.textAnswer && a.textAnswer.trim());
+      default:
+        return false;
+    }
   };
 
   if (loading) return <div className="play-quiz"><div className="loading">Učitavanje...</div></div>;
@@ -168,17 +311,12 @@ const PlayQuiz = () => {
       </div>
 
       <div className="question-card">
+        <div className="question-type-badge">
+          {currentQuestion && renderQuestionTypeLabel(currentQuestion.questionType)}
+        </div>
         <h3>{currentQuestion?.text}</h3>
         <div className="answers">
-          {currentQuestion?.answers.map((answer) => (
-            <button
-              key={answer.id}
-              className={`answer-btn ${answers[currentQuestion.id] === answer.id ? 'selected' : ''}`}
-              onClick={() => selectAnswer(currentQuestion.id, answer.id)}
-            >
-              {answer.text}
-            </button>
-          ))}
+          {currentQuestion && renderAnswers(currentQuestion)}
         </div>
       </div>
 
@@ -213,7 +351,7 @@ const PlayQuiz = () => {
         {questions.map((q, i) => (
           <button
             key={q.id}
-            className={`dot ${i === currentIndex ? 'active' : ''} ${answers[q.id] ? 'answered' : ''}`}
+            className={`dot ${i === currentIndex ? 'active' : ''} ${isQuestionAnswered(q.id) ? 'answered' : ''}`}
             onClick={() => setCurrentIndex(i)}
           >
             {i + 1}

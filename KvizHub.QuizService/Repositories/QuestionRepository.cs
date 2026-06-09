@@ -36,17 +36,40 @@ namespace KvizHub.QuizService.Repositories
             return question;
         }
 
-        public async Task UpdateAsync(Question question)
-        {
-            // Remove old answers and replace
-            var existingAnswers = await _context.Answers
-                .Where(a => a.QuestionId == question.Id)
-                .ToListAsync();
-            _context.Answers.RemoveRange(existingAnswers);
+                        public async Task ReplaceAsync(Question question)
+                        {
+                            // Load old answers that are tracked
+                            var oldAnswers = await _context.Answers
+                                .Where(a => a.QuestionId == question.Id)
+                                .ToListAsync();
 
-            _context.Questions.Update(question);
-            await _context.SaveChangesAsync();
-        }
+                            // Remove old answers (from change tracker)
+                            _context.Answers.RemoveRange(oldAnswers);
+
+                            // Update question scalar properties
+                            var existing = await _context.Questions.FindAsync(question.Id);
+                            if (existing != null)
+                            {
+                                existing.Text = question.Text;
+                                existing.QuestionType = question.QuestionType;
+                                existing.DifficultyLevel = question.DifficultyLevel;
+                                existing.Order = question.Order;
+                            }
+
+                            // Add new answers
+                            foreach (var answer in question.Answers)
+                            {
+                                _context.Answers.Add(new Answer
+                                {
+                                    QuestionId = question.Id,
+                                    Text = answer.Text,
+                                    IsCorrect = answer.IsCorrect,
+                                    Order = answer.Order
+                                });
+                            }
+
+                            await _context.SaveChangesAsync();
+                        }
 
         public async Task DeleteAsync(int id)
         {
