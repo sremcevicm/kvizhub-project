@@ -42,6 +42,7 @@ namespace KvizHub.QuizService.Controllers
             return Ok(quiz);
         }
 
+        [Authorize]
         [HttpGet("{id}/questions")]
         public async Task<ActionResult<List<QuestionDto>>> GetQuestions(int id)
         {

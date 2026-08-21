@@ -36,7 +36,18 @@ namespace KvizHub.QuizService.Models.DTOs
         public string? Description { get; set; }
         public int CategoryId { get; set; }
         public string Difficulty { get; set; } = "Medium";
-        public int TimeLimit { get; set; } = 30;
+        // Accept both "timeLimit" and "timeLimitMinutes" from frontend
+        private int _timeLimit = 30;
+        public int TimeLimit
+        {
+            get => _timeLimit;
+            set => _timeLimit = value;
+        }
+        public int TimeLimitMinutes
+        {
+            get => _timeLimit;
+            set => _timeLimit = value;
+        }
         public List<CreateQuestionDto> Questions { get; set; } = new();
     }
 

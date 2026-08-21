@@ -19,6 +19,7 @@ const PlayQuiz = () => {
   const [started, setStarted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState(null);
+  const [reviewQuestions, setReviewQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const loadQuiz = useCallback(async () => {
@@ -84,6 +85,22 @@ const PlayQuiz = () => {
       }
     });
   };
+
+    // After result comes in, load full questions with correct answers for review
+  const loadReviewData = useCallback(async () => {
+    try {
+      const questionsWithAnswers = await quizService.getQuestionsWithAnswers(id);
+      setReviewQuestions(questionsWithAnswers);
+    } catch (err) {
+      console.error('Error loading review data:', err);
+    }
+  }, [id]);
+
+  useEffect(() => {
+    if (result && reviewQuestions.length === 0) {
+      loadReviewData();
+    }
+  }, [result, reviewQuestions.length, loadReviewData]);
 
   const handleSubmit = useCallback(async () => {
     if (submitting) return;
@@ -227,6 +244,80 @@ const PlayQuiz = () => {
     }
   };
 
+  // ---- Review render helpers ----
+
+  const renderReviewAnswers = (question, userAns) => {
+    switch (question.questionType) {
+      case QuestionType.SINGLE_CHOICE:
+      case QuestionType.TRUE_FALSE:
+        return question.answers.map((answer) => {
+          const isSelected = userAns?.selectedAnswerId === answer.id;
+          const isCorrectAnswer = answer.isCorrect;
+          let className = 'review-answer';
+          if (isCorrectAnswer) className += ' answer-correct';
+          if (isSelected && !isCorrectAnswer) className += ' answer-wrong-selected';
+
+          return (
+            <div key={answer.id} className={className}>
+              <span className="review-answer-indicator">
+                {isCorrectAnswer ? '✓' : (isSelected ? '✗' : '')}
+              </span>
+              <span className="review-answer-text">{answer.text}</span>
+              {isSelected && <span className="review-your-answer">(vaš odgovor)</span>}
+              {isCorrectAnswer && !isSelected && <span className="review-correct-answer">(tačan odgovor)</span>}
+            </div>
+          );
+        });
+
+      case QuestionType.MULTIPLE_CHOICE:
+        return question.answers.map((answer) => {
+          const isSelected = (userAns?.selectedAnswerIds || []).includes(answer.id);
+          const isCorrectAnswer = answer.isCorrect;
+          let className = 'review-answer';
+          if (isCorrectAnswer) className += ' answer-correct';
+          if (isSelected && !isCorrectAnswer) className += ' answer-wrong-selected';
+          if (isCorrectAnswer && !isSelected) className += ' answer-missed';
+
+          const indicator = isCorrectAnswer ? '✓' : (isSelected ? '✗' : '');
+          return (
+            <div key={answer.id} className={className}>
+              <span className="review-answer-indicator">
+                {isSelected ? '☑' : '☐'} {indicator}
+              </span>
+              <span className="review-answer-text">{answer.text}</span>
+              {isSelected && <span className="review-your-answer">(vaš odgovor)</span>}
+              {isCorrectAnswer && !isSelected && <span className="review-correct-answer">(tačan odgovor)</span>}
+            </div>
+          );
+        });
+
+      case QuestionType.FILL_IN_BLANK: {
+        const correctAns = question.correctAnswerText;
+        const userText = userAns?.textAnswer || '';
+        const isCorrectAns = userAns?.isCorrect || false;
+        return (
+          <div className="review-fill-blank">
+            <div className="review-fill-row">
+              <span className="review-fill-label">Vaš odgovor:</span>
+              <span className={`review-fill-value ${isCorrectAns ? 'fill-correct' : 'fill-wrong'}`}>
+                „{userText}” {isCorrectAns ? '✓' : '✗'}
+              </span>
+            </div>
+            {!isCorrectAns && (
+              <div className="review-fill-row">
+                <span className="review-fill-label">Tačan odgovor:</span>
+                <span className="review-fill-value fill-correct">„{correctAns}”</span>
+              </div>
+            )}
+          </div>
+        );
+      }
+
+      default:
+        return <p className="unsupported-type">Nepodržan tip pitanja</p>;
+    }
+  };
+
   const isQuestionAnswered = (questionId) => {
     const a = answers[questionId];
     if (!a) return false;
@@ -248,18 +339,61 @@ const PlayQuiz = () => {
 
   if (loading) return <div className="play-quiz"><div className="loading">Učitavanje...</div></div>;
 
-  // Show result
+    // Show result
   if (result) {
+    // Build lookup: questionId -> user's answer data
+    const userAnswerMap = {};
+    if (result.answers) {
+      result.answers.forEach((a) => {
+        userAnswerMap[a.questionId] = a;
+      });
+    }
+
     return (
       <div className="play-quiz">
         <div className="result-card">
           <h2>Rezultat kviza</h2>
-          <div className="result-score">{result.percentage}%</div>
+          <div className={`result-score ${result.isPerfect ? 'perfect' : result.isPassing ? 'passing' : 'failing'}`}>
+            {result.percentage}%
+          </div>
           <div className="result-details">
             <p>Tačnih odgovora: <strong>{result.correctAnswers}/{result.totalQuestions}</strong></p>
             <p>Bodovi: <strong>{result.score}</strong></p>
             <p>Vreme: <strong>{result.timeFormatted}</strong></p>
           </div>
+
+          {/* Detailed review */}
+          {reviewQuestions.length > 0 && (
+            <div className="result-review">
+              <h3>Detaljan pregled</h3>
+              {reviewQuestions.map((q, idx) => {
+                const userAns = userAnswerMap[q.id];
+                const isCorrect = userAns?.isCorrect || false;
+
+                return (
+                  <div
+                    key={q.id}
+                    className={`review-question ${isCorrect ? 'review-correct' : 'review-wrong'}`}
+                  >
+                    <div className="review-q-header">
+                      <span className={`review-icon ${isCorrect ? 'icon-correct' : 'icon-wrong'}`}>
+                        {isCorrect ? '✅' : '❌'}
+                      </span>
+                      <span className="review-q-badge">{renderQuestionTypeLabel(q.questionType)}</span>
+                    </div>
+                    <p className="review-q-text">
+                      <strong>{idx + 1}.</strong> {q.text}
+                    </p>
+
+                    <div className="review-answers">
+                      {renderReviewAnswers(q, userAns)}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
           <div className="result-actions">
             <button onClick={() => navigate('/quizzes')} className="btn-back">Nazad na kvizove</button>
             <button onClick={() => navigate(`/leaderboard/quiz/${id}`)} className="btn-leaderboard">

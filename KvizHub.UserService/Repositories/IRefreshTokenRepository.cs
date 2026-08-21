@@ -6,6 +6,7 @@ namespace KvizHub.UserService.Repositories
     {
         Task<RefreshToken?> GetByTokenAsync(string token);
         Task CreateAsync(RefreshToken refreshToken);
+        Task UpdateAsync(RefreshToken refreshToken);
         Task RevokeAllForUserAsync(int userId);
         Task DeleteExpiredAsync();
     }

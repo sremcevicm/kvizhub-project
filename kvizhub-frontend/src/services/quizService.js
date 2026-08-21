@@ -63,6 +63,20 @@ const quizService = {
     await api.delete(`/api/quizzes/${id}`);
   },
 
+  createQuestion: async (quizId, data) => {
+    const response = await api.post(`/api/questions/quiz/${quizId}`, data);
+    return new Question(response.data);
+  },
+
+  updateQuestion: async (id, data) => {
+    const response = await api.put(`/api/questions/${id}`, data);
+    return new Question(response.data);
+  },
+
+  deleteQuestion: async (id) => {
+    await api.delete(`/api/questions/${id}`);
+  },
+
   getCategories: async () => {
     const response = await api.get('/api/categories');
     return mapCategories(response.data);

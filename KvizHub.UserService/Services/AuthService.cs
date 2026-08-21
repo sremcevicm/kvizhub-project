@@ -86,6 +86,7 @@ namespace KvizHub.UserService.Services
                 throw new UnauthorizedAccessException("Nevažeći refresh token.");
 
             tokenRecord.IsRevoked = true;
+            await _refreshTokenRepository.UpdateAsync(tokenRecord);
             var user = tokenRecord.User;
 
             var newAccessToken = GenerateAccessToken(user);

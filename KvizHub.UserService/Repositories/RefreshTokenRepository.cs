@@ -26,6 +26,12 @@ namespace KvizHub.UserService.Repositories
             await _context.SaveChangesAsync();
         }
 
+        public async Task UpdateAsync(RefreshToken refreshToken)
+        {
+            _context.RefreshTokens.Update(refreshToken);
+            await _context.SaveChangesAsync();
+        }
+
         public async Task RevokeAllForUserAsync(int userId)
         {
             var tokens = await _context.RefreshTokens
